@@ -2,5 +2,14 @@
 
   <app-list class="item" [posts]="posts" (openPost)="openPostHandler($event);" (newPost)="newPostHandler()"></app-list>
   <!-- openPost is the emitter object from list component -->
-  <app-edit class="item" [post] = "currentPost" *ngIf="currentPost"></app-edit>
+  <app-edit class="item" [post] = "currentPost" 
+  (savePost)="savePostHandler($event);" 
+  (deletePost)="deletePostHandler($event);" 
+  (previewPost)="previewPostHandler($event);"
+  *ngIf="state===1"></app-edit>
+  <!-- Only if the user clicked a post, will the edit view show up. -->
+
+  <app-preview *ngIf="state===2" [post]="currentPost" (editPost)="editPostHandler($event)"></app-preview>
 </div>
+
+<!-- Replace edit and preview ngIf with the app state. -->
