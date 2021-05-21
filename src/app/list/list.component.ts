@@ -16,7 +16,8 @@ import { Output, EventEmitter } from '@angular/core';
 
 export class ListComponent implements OnInit {
   @Input() posts: Post[]; //Will receive all the posts to display from app component parent
-  
+  @Output() openPost = new EventEmitter<Post>(); //When a post is clicked, emit an openPost event
+  @Output() newPost = new EventEmitter();
   constructor() { }
 
   ngOnInit(): void {

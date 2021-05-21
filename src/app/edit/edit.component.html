@@ -1,0 +1,13 @@
+<form>
+
+    <label for="title">Title:</label>
+    <br>
+    <input type="text" id="title" name="title" [(ngModel)]="post.title" value="{{ post.title }}"><br><br>
+    <br>
+    <label for="body">Body:</label>
+    <br>
+    <textarea type="text" id="body" name="body" [(ngModel)]="post.body" rows="4" cols="50"> {{ post.body }} </textarea><br><br>
+    <p>
+        Last Modified: {{ post.created | date: 'medium' }}
+    </p>
+</form>
