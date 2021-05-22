@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { Post } from './post';
 import { POSTS } from './fake_posts';
+import { BlogService } from './blog.service';
+import * as cookie from 'cookie';
 
 enum AppState { List, Edit, Preview };
 
@@ -11,11 +13,26 @@ enum AppState { List, Edit, Preview };
 })
 export class AppComponent {
   title = 'angular-blog';
-  posts = POSTS.sort(function(a, b) { return a.postid - b.postid; }); //Set posts to be from the fake posts array
+  posts: Post[];
+  // posts = POSTS.sort(function(a, b) { return a.postid - b.postid; }); //Set posts to be from the fake posts array
   currentPost:Post;
+  AppStateEnum = AppState; //to use in the template
   state: number = 0; //0 is none, 1 is edit, 2 is preview
   appState: AppState = AppState.List; //enum
-  
+  cookies: { [key: string]: string; } = cookie.parse(document.cookie);
+  jwt = parseJWT(this.cookies.jwt);
+  username = this.jwt.usr;
+
+  //Fetch all the initial posts
+  constructor(private blogService: BlogService) {
+    console.log("cookie: " + this.username);
+    blogService.fetchPosts(this.username).then( (posts) => 
+      {
+      this.posts = posts
+      .sort(function(a, b) { return a.postid - b.postid; }); })
+      .catch(err => console.log(err));
+  }
+
   //List component handlers
   openPostHandler(post: Post){
     console.log("Opened post: " + post.title + " " + post.postid);
@@ -34,29 +51,16 @@ export class AppComponent {
   //Edit component handlers. Should call REST api to do the actions, but will do mock for now
   savePostHandler(post: Post){
     console.log("Saving post");
-    //New post
-    //Update modified time
-    if(post.postid === 0){
-      //Set created time
-      post.postid = this.posts[this.posts.length-1].postid + 1;
-      this.posts.push(post);
-    }
-    //Update existing post with same post id
-    else{
-      for (let i = 0; i < this.posts.length; i++) {
-        //if the db post id matches the current one
-        if(this.posts[i].postid === post.postid){
-          console.log("Match");
-          post.modified = new Date().getTime();
-          this.posts[i] = post;
-          // this.posts[i].title = post.title;
-          // this.posts[i].body= post.body;
-          // this.posts[i].modified = new Date().getTime();
-        }
-      }
-    }
-    this.currentPost = post;
-    console.log(this.currentPost.modified);
+
+    //in database, add new post if postid is 0 or update existing
+    this.blogService.setPost(this.username, post).then(ret_post => {this.currentPost = ret_post})
+    .catch(err => console.log(err));
+    this.blogService.fetchPosts(this.username).then((ret_posts) => 
+    { 
+      this.posts = ret_posts.sort(function(a, b) { return a.postid - b.postid; });
+    })
+      .catch(err => console.log(err));
+
     this.appState = AppState.Edit;
     this.state = 1;
   }
@@ -66,9 +70,12 @@ export class AppComponent {
     this.appState = AppState.List;
     this.state = 0;
     console.log("Delete post");
-    this.posts = this.posts.filter(function(p){ 
-      return p.postid !== post.postid;
-    });
+    this.blogService.deletePost(this.username, post.postid).catch(err => console.log(err));
+    this.blogService.fetchPosts(this.username).then((ret_posts) => 
+    { 
+      this.posts = ret_posts.sort(function(a, b) { return a.postid - b.postid; });
+    })
+      .catch(err => console.log(err));
   }
 
   previewPostHandler(post: Post){
@@ -78,6 +85,7 @@ export class AppComponent {
     this.currentPost = post;
   }
 
+  // event handlers for preview component events
   editPostHandler(post: Post){
     console.log("Edit post");
     this.currentPost=post;
@@ -85,5 +93,11 @@ export class AppComponent {
     this.state=1;
   }
 
+}
 
+function parseJWT(token) 
+{
+    let base64Url = token.split('.')[1];
+    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
 }

@@ -7,7 +7,7 @@
     <label for="body">Body:</label>
     <br>
     <textarea type="text" id="edit-body" name="body" [(ngModel)]="post.body" rows="4" cols="50"> {{ post.body }} </textarea><br><br>
-    <p>
+    <p *ngIf="post.postid!==0">
         Last Modified: {{ post.modified | date: 'medium' }}
     </p>
 </form>

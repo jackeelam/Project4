@@ -6,10 +6,10 @@
   (savePost)="savePostHandler($event);" 
   (deletePost)="deletePostHandler($event);" 
   (previewPost)="previewPostHandler($event);"
-  *ngIf="state===1"></app-edit>
+  *ngIf="appState===AppStateEnum.Edit"></app-edit>
   <!-- Only if the user clicked a post, will the edit view show up. -->
 
-  <app-preview *ngIf="state===2" [post]="currentPost" (editPost)="editPostHandler($event)"></app-preview>
+  <app-preview *ngIf="appState===AppStateEnum.Preview" [post]="currentPost" (editPost)="editPostHandler($event)"></app-preview>
 </div>
 
-<!-- Replace edit and preview ngIf with the app state. -->
+<!-- Replace edit and preview ngIf with the app state. d-->
