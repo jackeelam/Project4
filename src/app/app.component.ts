@@ -19,22 +19,31 @@ export class AppComponent {
   AppStateEnum = AppState; //to use in the template
   appState: AppState; //enum
   cookies: { [key: string]: string; } = cookie.parse(document.cookie);
-  jwt = parseJWT(this.cookies.jwt);
-  username = this.jwt.usr;
+  username: string;
+
+  // jwt = parseJWT(this.cookies.jwt);
+  // username = this.jwt.usr;
 
   //Fetch all the initial posts
   constructor(private blogService: BlogService) {
-    console.log("cookie: " + this.username);
-    blogService.fetchPosts(this.username)
-    .then( (posts) => 
-      {
-      this.posts = posts.sort(function(a, b) { return a.postid - b.postid; }); 
-      this.onHashChange(); //in case of deep link
-    })
-      .catch(err => console.log(err));
+    if(this.cookies.jwt !== undefined){
+      console.log("jwt cookie passed in angular");
+      let jwt = parseJWT(this.cookies.jwt);
+      this.username = jwt.usr;
 
+      console.log("cookie: " + this.username);
+      blogService.fetchPosts(this.username)
+      .then( (posts) => 
+        {
+        this.posts = posts.sort(function(a, b) { return a.postid - b.postid; }); 
+        this.onHashChange(); //in case of deep link
+      })
+        .catch(err => console.log(err));
+
+      
+      window.addEventListener("hashchange", () => this.onHashChange());
+    }
     
-    window.addEventListener("hashchange", () => this.onHashChange());
     
     // this.onHashChange();
     //Initially look at the window hash to determine current post and appState
@@ -116,30 +125,57 @@ export class AppComponent {
   }
 
   //Edit component handlers. Should call REST api to do the actions, but will do mock for now
-  savePostHandler(post: Post){
-    console.log("Saving post");
+  async savePostHandler(post: Post){
+    console.log("Saving post jfalw;kejf");
     
     
     //in database, add new post if postid is 0 or update existing
-    this.blogService.setPost(this.username, post).then(ret_post => { 
-      if(post.postid === 0 ){
-        this.currentPost = post;
-        this.currentPost.created = ret_post.created;
-        this.currentPost.modified = ret_post.modified;
-        this.currentPost.postid = ret_post.postid;
-      }
-      else{
-        this.currentPost = post;
-        this.currentPost.modified = ret_post.modified;
-      }
-    })
-    .catch(err => console.log(err));
-    this.blogService.fetchPosts(this.username).then((ret_posts) => 
-    { 
-      this.posts = ret_posts.sort(function(a, b) { return a.postid - b.postid; });
-    })
-      .catch(err => console.log(err));
+    let ret_post = await this.blogService.setPost(this.username, post);
+    if(post.postid === 0 ){
+      this.currentPost = post;
+      this.currentPost.created = ret_post.created;
+      this.currentPost.modified = ret_post.modified;
+      this.currentPost.postid = ret_post.postid;
+    }
+    else{
+      this.currentPost = post;
+      this.currentPost.modified = ret_post.modified;
+    }
+    console.log("Saved postid " + this.currentPost.postid);
+
+    this.posts = await this.blogService.fetchPosts(this.username);
+    this.posts= this.posts.sort(function(a, b) { return a.postid - b.postid; });
+    console.log("Local array p: " + this.posts );
+
     window.location.hash = `#/edit/${this.currentPost.postid}`;
+
+    // this.blogService.setPost(this.username, post).then(ret_post => { 
+    //   if(post.postid === 0 ){
+    //     this.currentPost = post;
+    //     this.currentPost.created = ret_post.created;
+    //     this.currentPost.modified = ret_post.modified;
+    //     this.currentPost.postid = ret_post.postid;
+    //   }
+    //   else{
+    //     this.currentPost = post;
+    //     this.currentPost.modified = ret_post.modified;
+    //   }
+    //   console.log("Saved postid " + this.currentPost.postid);
+    // })
+    // .catch(err => console.log(err));
+
+    // this.blogService.fetchPosts(this.username).then((ret_posts) => 
+    // { 
+    //   this.posts = ret_posts.sort(function(a, b) { return a.postid - b.postid; });
+    //   console.log("Local array: " + this.posts );
+    //   return this.currentPost.postid;
+    // })
+    // .then((postid) => {
+    //   window.location.hash = `#/edit/${this.currentPost.postid}`;
+    // })
+    // .catch(err => console.log(err));
+
+    // window.location.hash = `#/edit/${this.currentPost.postid}`;
     // this.appState = AppState.Edit;
   }
 

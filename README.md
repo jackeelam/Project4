@@ -25,3 +25,6 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+cp ~/shared/angular-blog/dist/angular-blog/ ~/shared/project3/blog-server/public/editor -r
+ng build --base-href=/editor/ --deploy-url=/editor/ --prod=true
